@@ -1,7 +1,7 @@
 import sys
 import os
 
-# Add project root to PYTHONPATH
+# -------------------- PATH SETUP --------------------
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, PROJECT_ROOT)
 
@@ -29,7 +29,13 @@ st.caption("EfficientNet-B0 with Explainable Grad-CAM")
 DEVICE = torch.device("cpu")
 
 # -------------------- MODEL PATH (RELATIVE) --------------------
-MODEL_PATH = os.path.join("model", "brain_tumor_efficientnet_b0_final.pth")
+MODEL_PATH = os.path.join(PROJECT_ROOT, "model", "brain_tumor_efficientnet_b0_final.pth")
+
+# -------------------- MODEL EXISTENCE CHECK --------------------
+if not os.path.exists(MODEL_PATH):
+    st.error("❌ Model file not found.")
+    st.code(MODEL_PATH)
+    st.stop()
 
 # -------------------- LOAD MODEL --------------------
 @st.cache_resource
@@ -41,8 +47,14 @@ def load_cached_model():
 
 model = load_cached_model()
 
-# Adjust this layer name if needed
-gradcam = GradCAM(model, model.conv_head)
+# -------------------- GRADCAM SETUP --------------------
+try:
+    target_layer = model.conv_head
+except AttributeError:
+    st.error("❌ Grad-CAM target layer not found (model.conv_head).")
+    st.stop()
+
+gradcam = GradCAM(model, target_layer)
 
 # -------------------- FILE UPLOAD --------------------
 uploaded = st.file_uploader(
