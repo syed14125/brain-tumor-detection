@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 streamlit
 torch
 torchvision
@@ -5,3 +6,12 @@ numpy
 pillow
 opencv-python-headless
 timm
+=======
+streamlit
+torch
+torchvision
+numpy
+pillow
+opencv-python-headless
+timm
+>>>>>>> 079c569 (Streamlit Cloud ready)

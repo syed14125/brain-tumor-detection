@@ -4,6 +4,7 @@ import os
 # Add project root to PYTHONPATH
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, PROJECT_ROOT)
+
 import streamlit as st
 import torch
 from PIL import Image
@@ -13,24 +14,43 @@ from model_loader import load_model
 from utils.preprocess import preprocess_image
 from gradcam import GradCAM
 from utils.visualization import overlay_cam
-from config import CLASS_NAMES, DEVICE
+from config import CLASS_NAMES
 
-st.set_page_config(page_title="Brain Tumor Detection", layout="centered")
+# -------------------- STREAMLIT CONFIG --------------------
+st.set_page_config(
+    page_title="Brain Tumor Detection",
+    layout="centered"
+)
 
-st.title("🧠 Brain Tumor Detection System")
+st.title("Brain Tumor Detection System")
 st.caption("EfficientNet-B0 with Explainable Grad-CAM")
 
-# Load model
+# -------------------- DEVICE (CPU ONLY) --------------------
+DEVICE = torch.device("cpu")
+
+# -------------------- MODEL PATH (RELATIVE) --------------------
+MODEL_PATH = os.path.join("model", "brain_tumor_efficientnet_b0_final.pth")
+
+# -------------------- LOAD MODEL --------------------
 @st.cache_resource
 def load_cached_model():
-    return load_model(r"C:\Users\SONIC LAPTOPS\Desktop\brain tumor\model\brain_tumor_efficientnet_b0_final.pth")
+    model = load_model(MODEL_PATH)
+    model.to(DEVICE)
+    model.eval()
+    return model
 
 model = load_cached_model()
+
+# Adjust this layer name if needed
 gradcam = GradCAM(model, model.conv_head)
 
-uploaded = st.file_uploader("Upload MRI Image", type=["jpg","png","jpeg"])
+# -------------------- FILE UPLOAD --------------------
+uploaded = st.file_uploader(
+    "Upload MRI Image",
+    type=["jpg", "png", "jpeg"]
+)
 
-if uploaded:
+if uploaded is not None:
     image = Image.open(uploaded).convert("RGB")
     st.image(image, caption="Uploaded MRI", width=300)
 
@@ -39,12 +59,13 @@ if uploaded:
     with torch.no_grad():
         outputs = model(input_tensor)
         probs = torch.softmax(outputs, dim=1)
-        pred_idx = torch.argmax(probs).item()
+        pred_idx = torch.argmax(probs, dim=1).item()
 
     st.subheader("Prediction Result")
     st.write(f"**Tumor Type:** {CLASS_NAMES[pred_idx]}")
-    st.write(f"**Confidence:** {probs[0][pred_idx]*100:.2f}%")
+    st.write(f"**Confidence:** {probs[0][pred_idx] * 100:.2f}%")
 
+    # -------------------- GRAD-CAM --------------------
     cam = gradcam.generate(input_tensor, pred_idx)
     heatmap = overlay_cam(image, cam)
 
