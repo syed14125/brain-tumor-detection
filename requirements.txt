@@ -1,17 +1,7 @@
-<<<<<<< HEAD
-streamlit
-torch
-torchvision
+streamlit==1.32.0
+torch==2.1.2
+torchvision==0.16.2
+timm==0.9.12
 numpy
 pillow
 opencv-python-headless
-timm
-=======
-streamlit
-torch
-torchvision
-numpy
-pillow
-opencv-python-headless
-timm
->>>>>>> 079c569 (Streamlit Cloud ready)
